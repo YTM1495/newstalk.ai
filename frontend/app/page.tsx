@@ -1,25 +1,30 @@
 import NewsCard from "../components/NewsCard";
-export default async function Home(){
-        type NewsArticle = {
+type NewsArticle = {
           id:number;
           title:string;
           category:string;
           source:string;
+          date:string;
         };
 
+export default async function Home(){
+      
         const response = await fetch("http://localhost:8000/news");
         const news: NewsArticle[] = await response.json();
 
         return (
-          <main>
-            <h1>NewsTalk AI</h1>
+          <>
+          <main className = "max-w-3xl mx-auto p-8">
+            <h1 className = "text-4xl font-bold mb-8 text-center">NewsTalk AI</h1>
            {news.map((article) => (
             <NewsCard key = {article.id}
                       title = {article.title}
                       category = {article.category}
-                      source = {article.source}/>
+                      source = {article.source}
+                      date = {article.date}/>
            ))}
           </main>
+          </>
         );
 
 }

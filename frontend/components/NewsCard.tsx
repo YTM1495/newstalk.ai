@@ -2,10 +2,11 @@ type NewsCardProps = {
     title:string;
     category:string;
     source:string;
+    date:string;
 };
 
 export default function NewsCard({
-    title,category,source
+    title,category,source,date
 } : NewsCardProps){
     return (
         <div className ="border rounded-lg p-4 mb-4 shadow-sm">
@@ -16,6 +17,7 @@ export default function NewsCard({
                 {category}
                 </p>
                 <p className = "text-gray-600">{source}</p>
+                <p className="text-gray-600">{date}</p>
         </div>
     );
 }
