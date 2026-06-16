@@ -13,16 +13,19 @@ def news():
     {
         "id": 1,
         "title": "OpenAI launches new AI model",
-        "category": "Technology"
+        "category": "Technology",
+        "source": "Reuters"
     },
     {
         "id": 2,
         "title": "India wins cricket series",
-        "category": "Sports"
+        "category": "Sports",
+        "source": "Reuters"
     },
     {
         "id": 3,
         "title": "New space mission announced",
-        "category": "Science"
+        "category": "Science",
+        "source": "Reuters"
     }
 ]
