@@ -14,18 +14,21 @@ def news():
         "id": 1,
         "title": "OpenAI launches new AI model",
         "category": "Technology",
-        "source": "Reuters"
+        "source": "Reuters",
+        "date": "2025-02-23"
     },
     {
         "id": 2,
         "title": "India wins cricket series",
         "category": "Sports",
-        "source": "Reuters"
+        "source": "Reuters",
+        "date": "2025-04-13"
     },
     {
         "id": 3,
         "title": "New space mission announced",
         "category": "Science",
-        "source": "Reuters"
+        "source": "Reuters",
+        "date" : "2025-06-12"
     }
 ]
