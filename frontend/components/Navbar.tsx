@@ -1,3 +1,4 @@
+import Link from "next/link"
 export default function Navbar(){
     return(
         <nav className="flex justify-between items-center mb-8">
@@ -5,10 +6,10 @@ export default function Navbar(){
                 NewsTalk AI
                 </h1>
             <div className="flex gap-6">
-                <span>For You</span>
-                <span>Trending</span>
-                <span>Instant</span>
-                <span>Profile</span>
+                <Link href = "/">For You</Link>
+                <Link href = "/trending">Trending</Link>
+                <Link href = "/instant">Instant</Link>
+                <Link href = "/profile">Profile</Link>
             </div>
         </nav>
     );
