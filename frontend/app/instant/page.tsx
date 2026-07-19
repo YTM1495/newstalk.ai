@@ -1,10 +1,16 @@
 "use client";
 
+import NewsCard from "@/components/NewsCard";
 import { useState } from "react";
 
+type DigestArticle = {
+    id:number;
+    title:string;
+    category:string;
+};
 export default function InstantPage(){
     const [selectedTime, setSelectedTime] = useState(5);
-    const [articles, setArticles] = useState<string[]>([]);
+    const [articles, setArticles] = useState<DigestArticle[]>([]);
 
     async function generateDigest(){
         const response = await fetch(`http://localhost:8000/instant-news/${selectedTime}`);
@@ -51,13 +57,18 @@ export default function InstantPage(){
                     <h2 className = "text-xl font-bold mb-3">
                         Your Digest
                     </h2>
-                    {articles.map((article,index) => (
-                        <p key={index}>
-                            •{article}
-                        </p>
+                    {articles.map((article) => (
+                        <NewsCard
+                            key = {article.id}
+                            title = {article.title}
+                            category = {article.category}
+                            source =  "Instant Digest"
+                            date = ""
+                        />
                     ))}
                 </div>
             )}
         </main>
     );
+
 }
