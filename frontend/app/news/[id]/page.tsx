@@ -20,7 +20,7 @@ const response  = await fetch(
     `http://localhost:8000/news/${params.id}`
 );
 if(!response.ok){
-    throw new Error("Failde to fetch article");
+    throw new Error("Failed to fetch article");
 }
 const article: NewsArticle = await response.json();
 return (
