@@ -11,3 +11,4 @@ class NewsUpdate(BaseModel):
         content:str
         category:str
         source:str
+        summary: str | None = None

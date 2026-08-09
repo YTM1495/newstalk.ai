@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SummaryButton from "@/components/SummaryButton";
 type NewsArticle = {
     id: number;
     title: string;
@@ -8,16 +9,17 @@ type NewsArticle = {
     published_at : string;
 };
 type NewsPageProps = {
-    params: {
+    params: Promise< {
         id: string;
-    };
+    }>;
 };
 export default  async function NewsPage({
     params,
 }:NewsPageProps)
 {
+    const { id } = await params;
 const response  = await fetch(
-    `http://localhost:8000/news/${params.id}`
+    `http://localhost:8000/news/${id}`
 );
 if(!response.ok){
     throw new Error("Failed to fetch article");
@@ -30,6 +32,7 @@ return (
         <p>{article.source}</p>
         <p>{article.published_at}</p>
         <p>{article.content}</p>
+        <SummaryButton articleId={article.id}/>
     </main>
     
     

@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.crud.news import get_all_news,create_news,get_news_by_id,update_news,delete_news
 from app.schemas.news import NewsCreate, NewsUpdate
-
+from services.summary_service import SummaryService
 Base.metadata.create_all(bind = engine)
+
 app = FastAPI()
+summary_service = SummaryService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,3 +62,27 @@ def delete_news_endpoint(news_id:int, db:Session = Depends(get_db)):
     return {
         "message":"Article Deleted Successfully"
     }
+@app.post("/news/{article_id}/summary")
+def generate_summary_endpoint(
+    article_id: int,
+    db:Session = Depends(get_db)
+):
+    try:
+        summary = summary_service.generate_summary(
+        db,
+        article_id
+        )
+        if summary is None:
+            raise HTTPException(
+            status_code = 404,
+            detail = "article Not Found",
+            )
+        return {
+            "summary":summary
+        }
+    except RuntimeError:
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to generate summary.",
+        )
+    

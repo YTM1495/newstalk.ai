@@ -11,3 +11,4 @@ class NewsArticle(Base):
     category = Column(String, nullable=False)
     source = Column(String, nullable=False)
     published_at = Column(DateTime, nullable=False)
+    summary = Column(Text, nullable=True)

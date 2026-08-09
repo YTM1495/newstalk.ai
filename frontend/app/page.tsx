@@ -1,4 +1,5 @@
 import NewsCard from "../components/NewsCard";
+import Link from "next/link";
 type NewsArticle = {
           id:number;
           title:string;
@@ -21,12 +22,17 @@ export default async function Home(){
           <main className = "max-w-3xl mx-auto p-8">
             <h1 className = "text-4xl font-bold mb-8 text-center">NewsTalk AI</h1>
            {news.map((article) => (
+            <Link
+            key = {article.id}
+            href = {`/news/${article.id}`}
+            >
             <NewsCard key = {article.id}
                       id = {article.id}
                       title = {article.title}
                       category = {article.category}
                       source = {article.source}
                       date = {article.published_at}/>
+                      </Link>
            ))}
           </main>
           </>
