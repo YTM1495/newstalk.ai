@@ -1,14 +1,30 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import Base, engine
-from fastapi import Depends
+from sqlalchemy import inspect 
 from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.crud.news import get_all_news,create_news,get_news_by_id,update_news,delete_news
 from app.schemas.news import NewsCreate, NewsUpdate
 from services.summary_service import SummaryService
-Base.metadata.create_all(bind = engine)
+from app.schemas.explanation import ExplanationRequest
+from services.explain_service import ExplainService
+from app.models.user import User
+from app.models.category import Category
+from app.models.user_interest import UserInterest
+from app.models.news_article import NewsArticle
+from app.seed import seed_categories
+from app.db.database import sessionLocal
 
+Base.metadata.create_all(bind = engine)
+inspector = inspect(engine)
+print("tables:",inspector.get_table_names())
+
+db = sessionLocal()
+try:
+    seed_categories(db)
+finally:
+    db.close()
 app = FastAPI()
 summary_service = SummaryService()
 
@@ -86,3 +102,33 @@ def generate_summary_endpoint(
             detail="Unable to generate summary.",
         )
     
+@app.post("/news/{article_id}/explanation")
+def generate_explanation_endpoint(
+    article_id:int,
+    request: ExplanationRequest,
+    db:Session = Depends(get_db), 
+):
+    service = ExplainService()
+    try:
+        explanation = service.generate_explanation(
+            db,
+            article_id,
+            request.audience,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+    if explanation is None:
+        raise HTTPException(
+            status_code=404,
+            detail = "Artcile Not Found",
+        )
+    return {
+        "explanation":explanation
+    }
+@app.get("/categories")
+def get_categories(db:Session = Depends(get_db)):
+    
+    return db.query(Category).all()

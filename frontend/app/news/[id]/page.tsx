@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SummaryButton from "@/components/SummaryButton";
+import ExplainButton from "@/components/ExplainButton";
 type NewsArticle = {
     id: number;
     title: string;
@@ -33,6 +34,7 @@ return (
         <p>{article.published_at}</p>
         <p>{article.content}</p>
         <SummaryButton articleId={article.id}/>
+        <ExplainButton articleId={article.id}/>
     </main>
     
     

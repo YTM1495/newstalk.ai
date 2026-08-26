@@ -16,8 +16,23 @@ class SummaryService:
             return None
         if article.summary:
             return article.summary
+        prompt = f"""
+        You are an experienced news editor.
+        
+        Your task is to summarize the following news article.
+        
+        Rules:
+        - Keep the summary between 3 and 4 sentences.
+        - Preserve only the most important facts.
+        - Do not add information that is not present in the article.
+        - Use clear and professional language.
+        - Return only the summary.
+        
+        Article:
+        {article.content}
+        """    
         print("Calling Gemini...")
-        summary = self.ai_client.generate_summary(article.content)
+        summary = self.ai_client.generate(prompt)
         article.summary = summary
         db.commit()
         return summary

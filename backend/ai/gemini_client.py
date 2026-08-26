@@ -11,22 +11,8 @@ class GeminiClient:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables.")
         self.client = genai.Client(api_key = self.api_key)
-    def generate_summary(self,article_text):
-        prompt = f"""
-You are an experienced news editor.
-
-Your task is to summarize the following news article.
-
-Rules:
-- Keep the summary between 3 and 4 sentences.
-- Preserve only the most important facts.
-- Do not add information that is not present in the article.
-- Use clear and professional language.
-- Return only the summary.
-
-Article:
-{article_text}
-"""    
+    def generate(self,prompt):
+        
         try:
             response = self.client.models.generate_content(
             model = "gemini-3.6-flash",
