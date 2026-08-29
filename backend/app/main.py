@@ -15,6 +15,9 @@ from app.models.user_interest import UserInterest
 from app.models.news_article import NewsArticle
 from app.seed import seed_categories
 from app.db.database import sessionLocal
+from app.schemas.user_ineterests import UserInterestRequest
+from app.schemas.user import CreateUserRequest
+from services.feed_service import get_personalized_news
 
 Base.metadata.create_all(bind = engine)
 inspector = inspect(engine)
@@ -132,3 +135,69 @@ def generate_explanation_endpoint(
 def get_categories(db:Session = Depends(get_db)):
     
     return db.query(Category).all()
+
+@app.post("/users/{user_id}/interests")
+def set_user_interests(
+    user_id: int,
+    request: UserInterestRequest,
+    db: Session = Depends(get_db)
+    ):
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if user is None:
+            raise HTTPException(
+            status_code=404,
+            detail="User Not Found"
+            )
+        db.query(UserInterest).filter(UserInterest.user_id == user_id
+                ).delete()
+
+        for category_id in request.category_ids:
+            category = (
+            db.query(Category)
+            .filter(Category.id == category_id)
+            .first()
+            )
+            if category is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Category {category_id} Not Found",
+                )
+            interest = UserInterest(
+                user_id =user_id,
+                category_id=category_id,
+            )
+            db.add(interest)
+        db.commit()
+        return {
+        "message":"Interests Updated successfully"
+        }
+
+@app.post("/user")
+def create_user_endpoint(
+    user: CreateUserRequest,
+    db: Session = Depends(get_db),
+):
+    existing_user = (db.query(User)
+            .filter(User.email == user.email)
+            .first())
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail = "User with this email is already registered",
+        )
+    new_user = User(
+        name = user.name,
+        email = user.email,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
+@app.get("/feed/for-you")
+def get_for_you_feed(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_personalized_news(db,user_id)
