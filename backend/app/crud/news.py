@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.news_article import NewsArticle
 from app.schemas.news import NewsCreate,NewsUpdate
 from datetime import datetime
+from app.models.user_interest import UserInterest
 
 def get_all_news(db: Session):
     return db.query(NewsArticle).all()
@@ -9,14 +10,28 @@ def get_all_news(db: Session):
 def get_news_by_id(db: Session, news_id:int):
     return db.query(NewsArticle).filter(NewsArticle.id == news_id).first()
     
+def get_for_you_news(db:Session,user_id: int):
+    categories = (
+        db.query(UserInterest.category_id)
+        .filter(UserInterest.user_id == user_id)
+        .subquery()
+    )
+    return (
+        db.query(NewsArticle)
+        .filter(NewsArticle.category_id.in_(categories))
+        .all()
+    )
 
 def create_news(db:Session, news:NewsCreate):
     article = NewsArticle(
         title = news.title,
         content = news.content,
-        category = news.category,
+        category_id = news.category_id,
         source = news.source,
-        published_at = datetime.now()
+        published_at = datetime.now(),
+        url = news.url,
+        description = news.description
+
     )
     db.add(article)
     db.commit()
@@ -28,7 +43,7 @@ def update_news(db:Session,news_id:int, news:NewsUpdate):
         return None
     article.title = news.title
     article.content = news.content
-    article.category = news.category
+    article.category_id = news.category_id
     article.source = news.source
 
     db.commit()

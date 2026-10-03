@@ -4,8 +4,8 @@ from app.db.database import Base, engine
 from sqlalchemy import inspect 
 from sqlalchemy.orm import Session
 from app.dependencies import get_db
-from app.crud.news import get_all_news,create_news,get_news_by_id,update_news,delete_news
-from app.schemas.news import NewsCreate, NewsUpdate
+from app.crud.news import get_all_news,create_news,get_news_by_id,update_news,delete_news, get_for_you_news
+from app.schemas.news import NewsCreate, NewsUpdate, NewsResponse, article_to_response
 from services.summary_service import SummaryService
 from app.schemas.explanation import ExplanationRequest
 from services.explain_service import ExplainService
@@ -18,10 +18,19 @@ from app.db.database import sessionLocal
 from app.schemas.user_ineterests import UserInterestRequest
 from app.schemas.user import CreateUserRequest
 from services.feed_service import get_personalized_news
+from news.news_ingestion_service import NewsIngestionService
+from app.schemas.news_ingestion import NewsIngestionRequest
+from app.crud.user_interest import set_user_interests, get_user_interests_crud
+from app.schemas.user_ineterests import UserInterestRequest
+from app.schemas.category import CategoryResponse
+from app.schemas.common import MessageResponse 
+
 
 Base.metadata.create_all(bind = engine)
 inspector = inspect(engine)
 print("tables:",inspector.get_table_names())
+print("Columns:",
+      [column["name"] for column in inspector.get_columns("news_articles")])
 
 db = sessionLocal()
 try:
@@ -30,6 +39,10 @@ finally:
     db.close()
 app = FastAPI()
 summary_service = SummaryService()
+
+news_ingestion_service = NewsIngestionService()
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,9 +56,16 @@ def root():
     return{
         "message" : "NewsTalk AI Backend Running..."
            }
-@app.get("/news")
+
+@app.get("/news",
+         response_model=list[NewsResponse])
 def get_news(db: Session = Depends(get_db)):
-   return get_all_news(db)
+   articles = get_all_news(db)
+   return [
+       article_to_response(article)
+       for article in articles
+   ]
+
 @app.get("/news/{news_id}")
 def get_by_id(news_id:int, db:Session = Depends(get_db)):
     article = get_news_by_id(db,news_id)
@@ -136,42 +156,6 @@ def get_categories(db:Session = Depends(get_db)):
     
     return db.query(Category).all()
 
-@app.post("/users/{user_id}/interests")
-def set_user_interests(
-    user_id: int,
-    request: UserInterestRequest,
-    db: Session = Depends(get_db)
-    ):
-        user = db.query(User).filter(User.id == user_id).first()
-
-        if user is None:
-            raise HTTPException(
-            status_code=404,
-            detail="User Not Found"
-            )
-        db.query(UserInterest).filter(UserInterest.user_id == user_id
-                ).delete()
-
-        for category_id in request.category_ids:
-            category = (
-            db.query(Category)
-            .filter(Category.id == category_id)
-            .first()
-            )
-            if category is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Category {category_id} Not Found",
-                )
-            interest = UserInterest(
-                user_id =user_id,
-                category_id=category_id,
-            )
-            db.add(interest)
-        db.commit()
-        return {
-        "message":"Interests Updated successfully"
-        }
 
 @app.post("/user")
 def create_user_endpoint(
@@ -195,9 +179,75 @@ def create_user_endpoint(
     db.refresh(new_user)
 
     return new_user
-@app.get("/feed/for-you")
-def get_for_you_feed(
-    user_id: int,
-    db: Session = Depends(get_db)
+
+@app.post("/news/ingest")
+def ingest_news(
+    request: NewsIngestionRequest,
+    db: Session = Depends(get_db),
 ):
-    return get_personalized_news(db,user_id)
+    articles = news_ingestion_service.ingest_articles(
+        db = db,
+        query = request.query,
+        category=request.category,
+        page_size=request.page_size,
+    )
+
+    return{
+        "message":"News ingestion Completed",
+        "articles_added":len(articles),
+    }
+@app.post("/users/{user_id}/interests",
+          response_model=MessageResponse,
+          )
+def update_user_interests(
+    user_id: int,
+    request: UserInterestRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        categories = set_user_interests(
+            db,
+            user_id,
+            request.category_ids,
+        )
+        print("Categories:",categories)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+                   detail=str(error)
+            )
+    if categories is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User Not Found",
+        )
+    return {
+        "message":"Interests updated Successfully"
+    }
+@app.get("/users/{user_id}/interests",
+         response_model=list[CategoryResponse])
+def get_user_interests(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    categories = get_user_interests_crud(db,user_id)
+
+    if categories is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not Found",
+        )
+    return categories
+
+@app.get("/feed/for-you",
+         response_model=list[NewsResponse],
+         )
+def for_you_endpoint(
+    user_id: int,
+    db: Session = Depends(get_db),
+): 
+   articles = get_personalized_news(db,user_id)
+   return [
+       article_to_response(article)
+       for article in articles
+   ]

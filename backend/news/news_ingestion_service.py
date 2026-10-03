@@ -22,8 +22,9 @@ class NewsIngestionService:
             page_size=page_size,
         )
         articles = data.get("articles",[])
+        print("Number of articles:", len(articles))
         added_articles = []
-
+        dp = 0
         for article in articles:
             url = article.get("url")
 
@@ -36,6 +37,7 @@ class NewsIngestionService:
             )
 
             if existing_article:
+                dp = dp+1
                 continue
             news_article = NewsArticle(
                 title = article.get("title"),
@@ -53,4 +55,6 @@ class NewsIngestionService:
             added_articles.append(news_article)
 
             db.commit()
-            return added_articles
+        print("Number of duplicates:",dp)
+        return added_articles
+       

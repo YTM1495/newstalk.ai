@@ -1,3 +1,4 @@
+import Link from "next/link";
 type NewsCardProps = {
     id:number;
     title:string;
@@ -10,6 +11,7 @@ export default function NewsCard({
    id,title,category,source,date
 } : NewsCardProps){
     return (
+        <Link href = {`/news/${id}`}>
         <div className ="border rounded-lg p-4 mb-4 shadow-sm">
             <h2 className ="text-xl font-semibold">
                 {title}
@@ -20,5 +22,6 @@ export default function NewsCard({
                 <p className = "text-gray-600">{source}</p>
                 <p className="text-gray-600">{date}</p>
         </div>
+        </Link>
     );
 }
