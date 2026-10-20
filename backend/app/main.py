@@ -18,7 +18,7 @@ from app.db.database import sessionLocal
 from app.schemas.user_ineterests import UserInterestRequest
 from app.schemas.user import CreateUserRequest
 from services.feed_service import get_personalized_news
-from news.news_ingestion_service import NewsIngestionService
+from app.services.news_ingestion_service import NewsIngestionService
 from app.schemas.news_ingestion import NewsIngestionRequest
 from app.crud.user_interest import set_user_interests, get_user_interests_crud
 from app.schemas.user_ineterests import UserInterestRequest
@@ -120,8 +120,14 @@ def generate_summary_endpoint(
             "summary":summary
         }
     except RuntimeError:
+        import logging
+
+        logging.exception(
+            "Summary generation failed for article_id = %s",
+            article_id,
+        )
         raise HTTPException(
-            status_code=500,
+            status_code = 500,
             detail="Unable to generate summary.",
         )
     
@@ -251,3 +257,19 @@ def for_you_endpoint(
        article_to_response(article)
        for article in articles
    ]
+
+@app.post("/news/ingest/{category}")
+def ingest_news_endpoint(
+    category:str,
+    db: Session = Depends(get_db),
+):
+    try:
+        return news_ingestion_service.ingest_category(
+            db,
+            category.lower(),
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code = 400,
+            detail=str(error),
+        )

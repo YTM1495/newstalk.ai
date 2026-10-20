@@ -14,16 +14,28 @@ const [loading,setLoading] = useState(false);
 
 async function generateSummary(){
     setLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if(!apiUrl){
+        throw new Error("NEXT_PUBLIC_API_URL is not configured");
+    }
     try{
         const response = await fetch(
-        `http://localhost:8000/news/${articleId}/summary`,
+        `${apiUrl}/news/${articleId}/summary`,
         {
             method:"POST",
         }
     );
-    if (!response.ok){
-        throw new Error("Filed to generate summary");
-    }
+    if (!response.ok) {
+  const errorDetails = await response.text();
+
+  console.error("Summary API error:", {
+    status: response.status,
+    details: errorDetails,
+  });
+
+  throw new Error(
+    `Failed to generate summary: ${response.status}`
+  );}
     const data = await response.json();
     setSummary(data.summary);
     }

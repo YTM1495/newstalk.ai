@@ -17,12 +17,17 @@ type NewsArticle = {
 export default function ForYouPage(){
     const [news,setNews] = useState<NewsArticle[]>([]);
     const [loading,setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     useEffect(() => {
         async function fetchForYouNews(){
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            if(!apiUrl){
+                throw new Error("NEXT_PUBLIC_API_URL is not configured");
+            }
             try{
                 const response = await fetch(
-                    "http://127.0.0.1:8000/feed/for-you?user_id=1"
+                    `${apiUrl}/feed/for-you?user_id=1`
                 );
 
                 if(!response.ok){
@@ -31,24 +36,70 @@ export default function ForYouPage(){
 
                 const data = await response.json();
                 setNews(data);
-            }catch(error){
-                console.error(error);
-            }finally{
-                setLoading(false);
+            }catch (error) {
+            console.error(error);
+            setError(true);
+                } finally {
+            setLoading(false);
             }
+            if (error) {
+    return (
+        <main className="max-w-3xl mx-auto p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">
+                Unable to load your news
+            </h1>
+
+            <p className="text-gray-600 mb-6">
+                We couldn't load your personalized feed.
+                Please try again.
+            </p>
+
+            <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="cursor-pointer rounded-lg bg-black px-6 py-3 text-white"
+            >
+                Try again
+            </button>
+        </main>
+    );
+    }
         }
         fetchForYouNews();
     },[]);
     if (loading){
         return <p>Loading your news...</p>;
     }
+
+    if (error) {
+    return (
+        <main className="max-w-3xl mx-auto p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">
+                Unable to load your news
+            </h1>
+
+            <p className="text-gray-600 mb-6">
+                We couldn't load your personalized feed.
+                Please try again.
+            </p>
+
+            <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="cursor-pointer rounded-lg bg-black px-6 py-3 text-white"
+            >
+                Try again
+            </button>
+        </main>
+    );
+        }
     return (
         <main className="p-6">
             <h1 className="text-3xl font-bold mb-6">
                 For You
             </h1>
 
-            {news.length == 0 ? (
+            {news.length === 0 ? (
                 <p>No personalized news available.</p>
             ):(
                 news.map((article) => (

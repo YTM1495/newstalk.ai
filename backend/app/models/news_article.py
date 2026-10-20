@@ -1,10 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from app.db.database import Base
 from sqlalchemy.orm import relationship
-
 class NewsArticle(Base):
     __tablename__ = "news_articles"
-
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     content = Column(Text, nullable=True)
@@ -15,7 +13,5 @@ class NewsArticle(Base):
     source = Column(String, nullable=False)
     published_at = Column(DateTime, nullable=False)
     summary = Column(Text, nullable=True)
-    url = Column(Text, nullable=False)
+    url = Column(Text, nullable=False,unique = True)
     description = Column(Text, nullable=False)
-
-    
